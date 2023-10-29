@@ -25,7 +25,7 @@
     - Database
         - Test database works
 - Others
-    - Design data format/systems needed [*]
+    - Design data format/systems needed [*]  
 (tasks with a * are ones that can be tackled immediately)
 
 ## For next meeting
