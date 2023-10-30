@@ -3,7 +3,7 @@
 ## Todo list
 
 - Central algorithm
-    - Throw around ideas for the algo [*]
+    - Throw around ideas for the algo [*] [all ]
     - Ensure input/output to algo works properly
 - Valve control
     - Test if module can receieve commands from Algorithm 
@@ -25,7 +25,8 @@
     - Database
         - Test database works
 - Others
-    - Design data format/systems needed [*]  
+    - Design data format/systems needed [*]
+      - Do this now 
 (tasks with a * are ones that can be tackled immediately)
 
 ## For next meeting
