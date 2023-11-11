@@ -1,4 +1,13 @@
-# Kepler project code
+# ICSS Kepler Flow Control Software
+
+This repository hosts all software related to the ICSS (Imperial College Space Society) Kepler Engine Fuel Flow Control System. The main components are
+- `onboard`: Python-based software intended for a PI-variant on the engine itself, which autonomously controls the fuel flow based on various sensor input (e.g., pressure, temperature). It has a built-in failsafe, but also connects to
+- `failsafe`: An analogue custom-PCB which automatically shuts off all flow if a keep-alive signal from `onboard` dies.
+- `base`: A simple GUI for monitoring and controlling the engine remotely, along with various data analytic tools.
+
+## Onboard
+
+TODO: Docs
 
 ## Todo list
 
