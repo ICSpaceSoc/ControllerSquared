@@ -49,6 +49,14 @@ class Sensor:
             float: Smoothed sensor output.
         """
         # TODO: Implement smoothing algorithm
+
+        # (13-11) some notes on smoothing algorithms (https://plotly.com/python/smoothing/) using scipy
+        # 1. Savitzky-Golay Filter - interpolating polynomials
+        # 2. Moving Averages (simple and triangular)
+            # - triangular moving averages gives more weight to more recent datapoints, hence its probably more preferable than poly interp 
+            #   and simple average
+        
+        
         return raw + 1
 
     # === Main Loop ===
