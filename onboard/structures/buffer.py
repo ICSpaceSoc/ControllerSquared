@@ -1,7 +1,6 @@
 from typing import Union
 import numpy as np
 
-
 class Buffer:
     """
     Circular buffer which stores sensor readings in a NumPy structured array.

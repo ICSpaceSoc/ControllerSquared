@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from random import random
 
-from buffer import Buffer
+from structures.buffer import Buffer
 
 class Sensor:
     """
@@ -13,9 +13,20 @@ class Sensor:
         self._buffer_size = buffer_size
         self._sample_rate = sample_rate
 
-        self._buffer = Buffer(buffer_size)
+        self.buffer = Buffer(buffer_size)
 
         self._active = False
+
+    def toggle(self, state: bool):
+        """Toggles the sensor on or off.
+
+        Args:
+            state (bool): `True` to turn the sensor on, `False` to turn it off.
+        """
+        self._active = state
+
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.loop())
 
     # === Physical ===
     async def read_sensor(self) -> float:
@@ -48,7 +59,7 @@ class Sensor:
         """
         while self._active:
             raw = await self.read_sensor()
-            self._buffer += (
+            self.buffer += (
                 raw,
                 self.filter_reading(raw),
                 datetime.now().timestamp()
