@@ -5,6 +5,8 @@ This repository hosts all software related to the ICSS (Imperial College Space S
 - `failsafe`: An analogue custom-PCB which automatically shuts off all flow if a keep-alive signal from `onboard` dies.
 - `base`: A simple GUI for monitoring and controlling the engine remotely, along with various data analytic tools.
 
+During development, each of the components have their own directory, and are treated independently. When in doubt, such as when dealing with relative directories, treat each component as a separate project.
+
 ## Onboard
 
 TODO: Docs
