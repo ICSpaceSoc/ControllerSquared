@@ -1,24 +1,25 @@
 from typing import Union
 import numpy as np
+from sys import maxsize
 
 class Buffer:
     """
     Circular buffer which stores sensor readings in a NumPy structured array.
     """
 
-    def __init__(self, max_size: int):
+    def __init__(self, max_size: int, dtype: list[tuple[str, type]]):
         """Initialises a circular buffer using a NumPy structured array.
 
         Args:
             max_size (int): Maximum number of readings to store.
+            dtype
         """
         if max_size <= 0:
-            # TODO: Integrate with overall logging system
             raise ValueError('Buffer size must be positive')
-        self._buffer = np.zeros(
-            max_size,
-            dtype=[('value', np.float64), ('sValue', np.float64), ('timestamp', np.float64)]
-        )
+        
+        self._dtype = dtype
+        self._fields = list(map(lambda type: type[0], self._dtype))
+        self._buffer = np.zeros(max_size, dtype = self._dtype)
         self._max_size = max_size
         self._index = 0
         self._size = 0
@@ -29,80 +30,77 @@ class Buffer:
         Args:
             other (tuple): A reading to add to the buffer.
 
-        Raises:
-            ValueError: If `other` is not a compatible type, a ValueError is
-                raised.
-
         Returns:
             Buffer: The buffer itself.
         """
-        if not isinstance(other, tuple):
-            # TODO: Integrate with overall logging system
-            raise ValueError("Invalid argument type.")
-
         self._buffer[self._index] = other
         self._index = (self._index + 1) % self._max_size
         self._size = min(self._size + 1, self._max_size)
         return self
 
-    def __getitem__(self, key: Union[int, slice], field: str = 'timestamp') -> Union[np.void, np.ndarray]:
-        """Returns a reading or a selection of readings from the buffer.
+    def __getitem__(
+            self, 
+            key: Union[int, slice, str, tuple[slice, str]], 
+        ) -> Union[np.void, np.ndarray]:
+        """Returns a reading or a selection of readings from the buffer based on the given key.
 
         Args:
-            key (Union[int, slice]): 
-                int -> Index of the reading to return. 
-                    Positive values are interpreted as direct references to
-                    the buffer.
-                    Negative values are allowed, and are interpreted as the
-                    most recent values. E.g., [-1] returns the most recent
-                    reading.
-                slice -> 
-                    Returns a selection of readings from the buffer.  The 
-                    slice is interpreted as a range of a particular field, 
-                    defaulting to 'timestamp'. The range is inclusive of the 
-                    start and end values. E.g., [10:20] returns all readings 
-                    with 'timestamp' between 10 and 20, inclusive, and 
-                    [10:, 'value'] returns all readings with 'value' between 
-                    10 and infinity, inclusive.
-            field (str, optional): In case of a slice, determines which field
-                to filter for return data by. Defaults to 'timestamp'.
+            key (Union[int, slice, str, tuple[slice, str]]):
+                int -> Returns the index offset from the current index.
+                slice -> Returns a selection based on the slice, offset from the current index.
+                str -> Returns the field from the buffer, oldest to newest.
+                tuple[slice, str] -> Returns a selection based on the slice, filtered by the field.
 
         Raises:
-            ValueError:
-                key: slice, field -> If the field is not a valid field in the
-                    buffer's dtype, a ValueError is raised.
-            IndexError: 
-                key: int -> Values which are out of range in either direction
-                    will raise an IndexError.
-            TypeError: An invalid key type will raise a TypeError.
+            IndexError: The index or slice range is out of bounds, or invalid.
+            ValueError: The field provided is not valid.
 
         Returns:
-            Union[np.void, np.ndarray]: A single reading or a selection of
-                readings from the buffer.
+            Union[np.void, np.ndarray]: A single reading or a selection of readings.
         """
-        if isinstance(key, slice):
-            if not self._buffer.dtype.names or field not in self._buffer.dtype.names:
-                # TODO: Integrate with overall logging system
-                raise ValueError(f"Invalid field: {field}")
-
-            start, stop = key.start, key.stop
-
-            # NOTE: This trick depends on all values being numerical.
-            if start is None:
-                start = float('-inf')
-            if stop is None:
-                stop = float('inf')
-
-            return self._buffer[(self._buffer[field] >= start) & (self._buffer[field] <= stop)]
-
+        
         if isinstance(key, int):
-            if abs(key) > self._size:
-                # TODO: Integrate with overall logging system
-                raise IndexError("Index out of range")
+            if (key >= self._size) or (key < -self._size):
+                raise IndexError("Index out of bounds.")
 
-            acc_index = (self._index + key) % self._max_size if key < 0 else key
-            return self._buffer[acc_index]
+            return self._buffer[(self._index + key) % self._max_size]
+        
+        if isinstance(key, tuple) and len(key) == 2 and\
+            isinstance(key[0], slice) and isinstance(key[1], str):
+            field = key[1]
+            if field not in self._fields:
+                raise ValueError(f"Field '{field}' does not exist in the buffer.")
 
-        # TODO: Integrate with overall logging system
-        raise TypeError("Invalid argument type.")
+            start, stop, _ = key[0].indices(maxsize)
+            return self._buffer[(self._buffer[field] >= start) & (self._buffer[field] < stop)]
+        
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self._max_size)
+            return np.array([self._buffer[(self._index + i) % self._max_size] for i in range(start, stop, step)])
+        
+        if isinstance(key, str):
+            if key not in self._fields:
+                raise ValueError(f"Field '{key}' does not exist in the buffer.")
+            return np.roll(self._buffer[key], -self._index)
+
+        raise IndexError("Key must be an int, slice, string, or a field-filtered slice.")
     
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the data in the buffer, formatted in a table-like style.
+
+        Returns:
+            str: A string representation of the buffer data.
+        """
+
+        column_widths = {name: max(len(name), max(len(str(row[name])) for row in self._buffer)) for name in self._fields}
+        header = " | ".join(name.ljust(column_widths[name]) for name in self._fields)
+        separator = "-+-".join("-" * column_widths[name] for name in self._fields)
+
+        rows = []
+        for row in self._buffer:
+            formatted_row = " | ".join(str(row[name]).ljust(column_widths[name]) for name in self._fields)
+            rows.append(formatted_row)
+
+        data_str = "\n".join([header, separator] + rows)
+        return data_str + f"\nIndex: {self._index}\nSize: {self._size}\nMax Size: {self._max_size}"
