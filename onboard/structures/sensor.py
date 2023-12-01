@@ -1,8 +1,8 @@
 import asyncio
+from .Buffer import Buffer
 from datetime import datetime
+import numpy as np
 from random import random
-
-from structures.buffer import Buffer
 
 class Sensor:
     """
@@ -13,7 +13,10 @@ class Sensor:
         self._buffer_size = buffer_size
         self._sample_rate = sample_rate
 
-        self.buffer = Buffer(buffer_size)
+        self.buffer = Buffer(
+            buffer_size,
+            [('value', np.float64), ('corr_value', np.float64), ('timestamp', np.float64)]
+        )
 
         self._active = False
 
@@ -36,7 +39,7 @@ class Sensor:
             float: Raw sensor input.
         """
         # TODO: Implement GPIO reading
-        return random()
+        return np.sin(datetime.now().timestamp()) + 0.2 * random()
 
     # === Smoothing ===
     def filter_reading(self, raw: float) -> float:
@@ -54,7 +57,7 @@ class Sensor:
         # 1. Savitzky-Golay Filter - interpolating polynomials
         # 2. Moving Averages (simple and triangular)
             # - triangular moving averages gives more weight to more recent datapoints, hence its probably more preferable than poly interp 
-            #   and simple average
+            #   and simple average 
         
         
         return raw + 1

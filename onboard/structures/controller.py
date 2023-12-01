@@ -5,12 +5,21 @@ This class is responsible for the main loop of the onboard computer.
 """
 
 import asyncio
-from .sensor import Sensor
+from .Sensor import Sensor
 
 class Controller:
     """
     Singleton class for controller.
     """
+
+    _instance = None
+
+    def __new__(cls):
+        # It turns out that singletons in __init__.py are not recommended...?
+        if cls._instance is None:
+            cls._instance = super(Controller, cls).__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
 
     PT1 = Sensor('PT1', buffer_size=10000, sample_rate=0.0005)
     PT2 = Sensor('PT2', buffer_size=10000, sample_rate=3)

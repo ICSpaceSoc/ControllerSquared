@@ -1,11 +1,3 @@
-from .sensor import Sensor
-from .valve import Valve
-from .controller import Controller
+from .Controller import Controller
 
-cont = Controller()
-
-__all__ = [
-    "Sensor",
-    "Valve",
-    "cont"
-]
+__all__ = ['Controller']

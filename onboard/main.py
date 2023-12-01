@@ -1,8 +1,9 @@
 import asyncio
 
-from structures import cont
+from structures import Controller
 
 async def main():
+    cont = Controller()
     cont.toggle(True)
 
     while True:
