@@ -2,17 +2,19 @@ from typing import Union
 import numpy as np
 from sys import maxsize
 
+_DEF_DTYPE = [('value', np.float64), ('corr_value', np.float64), ('timestamp', np.float64)]
+
 class Buffer:
     """
     Circular buffer which stores sensor readings in a NumPy structured array.
     """
 
-    def __init__(self, max_size: int, dtype: list[tuple[str, type]]):
+    def __init__(self, max_size: int, dtype: list[tuple[str, type]] = _DEF_DTYPE):
         """Initialises a circular buffer using a NumPy structured array.
 
         Args:
             max_size (int): Maximum number of readings to store.
-            dtype
+            dtype: (list[tuple[str, type]], optional): Data type of the readings. Defaults to _DEF_DTYPE.
         """
         if max_size <= 0:
             raise ValueError('Buffer size must be positive')
