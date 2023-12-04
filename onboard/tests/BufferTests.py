@@ -104,6 +104,14 @@ class BufferTests(unittest.TestCase):
             [(6, 6, 60), (7, 7, 70)],
             "Get by field-filtered slice is incorrect."
         )
+    
+    def test_get_nonint_filtered_slice(self):
+        """Tests getting data from the buffer using a non-integer field-filtered slice."""
+        self.assertEqual(
+            self.buffer[6.5:8.5, "value"].tolist(),
+            [(7, 7, 70), (8, 8, 80)],
+            "Get by non-integer field-filtered slice is incorrect."
+        )
 
 class BufferPerfTests(unittest.TestCase):
 

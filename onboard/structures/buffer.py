@@ -73,8 +73,11 @@ class Buffer:
             if field not in self._fields:
                 raise ValueError(f"Field '{field}' does not exist in the buffer.")
 
-            start, stop, _ = key[0].indices(maxsize)
-            return self._buffer[(self._buffer[field] >= start) & (self._buffer[field] < stop)]
+            start, stop = key[0].start, key[0].stop
+            return self._buffer[
+                (start is None or self._buffer[field] >= start) &\
+                (stop is None or self._buffer[field] < stop)
+            ]
         
         if isinstance(key, slice):
             start, stop, step = key.indices(self._max_size)
