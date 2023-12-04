@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import Union
 import numpy as np
 from sys import maxsize
 
-_DEF_DTYPE = [('value', np.float64), ('corr_value', np.float64), ('timestamp', np.float64)]
+_DEF_DTYPE = [('value', np.float64), ('corr_value', np.float64), ('timestamp', datetime)]
 
 class Buffer:
     """
@@ -21,6 +22,7 @@ class Buffer:
         
         self._dtype = dtype
         self._fields = list(map(lambda type: type[0], self._dtype))
+        self._types = tuple(map(lambda type: type[1], self._dtype))
         self._buffer = np.zeros(max_size, dtype = self._dtype)
         self._max_size = max_size
         self._index = 0
@@ -67,17 +69,22 @@ class Buffer:
 
             return self._buffer[(self._index + key) % self._max_size]
         
-        if isinstance(key, tuple) and len(key) == 2 and\
-            isinstance(key[0], slice) and isinstance(key[1], str):
+        if isinstance(key, tuple) and len(key) == 2 and isinstance(key[1], str):
             field = key[1]
             if field not in self._fields:
-                raise ValueError(f"Field '{field}' does not exist in the buffer.")
+                    raise ValueError(f"Field '{field}' does not exist in the buffer.")
 
-            start, stop = key[0].start, key[0].stop
-            return self._buffer[
-                (start is None or self._buffer[field] >= start) &\
-                (stop is None or self._buffer[field] < stop)
-            ]
+            if isinstance(key[0], slice):
+                start, stop = key[0].start, key[0].stop
+                return self._buffer[
+                    (start is None or self._buffer[field] >= start) &\
+                    (stop is None or self._buffer[field] < stop)
+                ]
+            
+            if isinstance(key[0], self._types):
+                return self._buffer[self._buffer[field] == key[0]]
+            
+            raise ValueError(f"Invalid slice type '{type(key[0])}' for field '{field}'.")
         
         if isinstance(key, slice):
             start, stop, step = key.indices(self._max_size)

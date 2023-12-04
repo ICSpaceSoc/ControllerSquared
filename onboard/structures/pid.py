@@ -31,7 +31,7 @@ class PID:
             float: _description_
         """
 
-        y = self.buffer[current_time, "timestamp"] #current value. TODO: adjust this to access the buffer properly
+        y = self.buffer[current_time, 'timestamp']['corr_value'] #current value. TODO: adjust this to access the buffer properly
         e = self.setpoint - y
         data = self.buffer[self.most_recent_timestep_cached: current_time, "timestamp"]
 
@@ -57,13 +57,13 @@ class PID:
 
 
 def test():
-    from .buffer import Buffer
+    from Buffer import Buffer
     import matplotlib.pyplot as plt
     import datetime as dt
 
     buff = Buffer(10)
     for i in range(15):
-        buffer += (i, i, 0.1 * i)
+        buff += (i, i, 0.1 * i)
 
     pid = PID(5, buff, 1, 2, 3)
     print(pid.update(dt.datetime.now()))
