@@ -30,9 +30,8 @@ class PID:
             float: _description_
         """
 
-        y = self.buffer[current_time, 'timestamp']['corr_value'] #current value. TODO: adjust this to access the buffer properly
         y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly
-        print(y)
+        y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly
         e = self.setpoint - y
         data = self.buffer[self.most_recent_index_cached: current_time]
 
