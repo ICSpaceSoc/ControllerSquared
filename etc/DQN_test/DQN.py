@@ -21,6 +21,7 @@ lr=0.001
 
 """
 Note: DQN only works with a discretised action space. So, we have only 2 action ie:higher, lower. 
+TODO: fix thisssss
 """
 
 

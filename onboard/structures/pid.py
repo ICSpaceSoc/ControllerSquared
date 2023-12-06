@@ -2,7 +2,7 @@ import numpy as np
 
 class PID:
 
-    def __init__(self, setpoint, buffer, kp, ki, kd):        
+    def __init__(self, setpoint: float, buffer, kp: float, ki: float, kd: float):        
         """_summary_
 
         Args:
@@ -12,7 +12,7 @@ class PID:
             ki (_type_): _description_
             kd (_type_): _description_
         """
-        self.setpoint = setpoint  
+        self.setpoint = setpoint # setpoint can be changed by reassigning the variable directly
         self.buffer = buffer
         self.kp = kp
         self.ki = ki
@@ -24,14 +24,13 @@ class PID:
         """_summary_
 
         Args:
-            current_time (_type_): current time in index
+            current_time (dt.datetime): the time as of caling the function
 
         Returns:
             float: _description_
         """
 
-        y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly
-        y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly
+        y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly. also, make sure that the correct timstep is accessed (ie: it exists)
         e = self.setpoint - y
         data = self.buffer[self.most_recent_index_cached: current_time]
 
@@ -47,19 +46,21 @@ class PID:
             
             value_sum = data[i+1][1]-data[i][1]
             self.integral += time_diff*0.5*value_sum
-        
+    
 
         P = self.kp * e
         I = self.ki *  self.integral
         D = self.kd * (data[-1][1]-data[-2][1])/(data[-1][2]-data[-2][2]).total_seconds()
         # we can always change how this grad is computed (ie: number of points to lookback)
+
+        self.most_recent_index_cached = current_time;
+
         u = P + I + D
-        
+
         return u
 
 
 def test():
-    from Buffer import Buffer
     from Buffer import Buffer
     import datetime as dt
     import matplotlib.pyplot as plt
