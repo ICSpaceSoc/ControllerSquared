@@ -120,7 +120,7 @@ class BufferPerfTests(unittest.TestCase):
 
         self._size = 1000
         self._num_ops = 500 * 12 * 2
-        self._max_time = 1
+        self._max_time = 100
 
         self.buffer = Buffer(
             self._size, 

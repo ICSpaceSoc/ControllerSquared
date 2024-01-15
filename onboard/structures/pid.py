@@ -20,7 +20,7 @@ class PID:
         self.integral = 0
         self.most_recent_index_cached = 0 # the most recent timstep included in the integral.
 
-    def update(self, current_time) -> float:
+    def update(self) -> float:
         """_summary_
 
         Args:
@@ -29,10 +29,13 @@ class PID:
         Returns:
             float: _description_
         """
-
-        y = self.buffer[current_time][1] #current value. TODO: adjust this to access the buffer properly. also, make sure that the correct timstep is accessed (ie: it exists)
+        y = self.buffer[-1][1] #current value. TODO: adjust this to access the buffer properly. also, make sure that the correct timstep is accessed (ie: it exists)
+        current_time = self.buffer[-1][2]
         e = self.setpoint - y
-        data = self.buffer[self.most_recent_index_cached: current_time]
+        if(self.most_recent_index_cached == 0):
+            data = self.buffer[: current_time, "timestamp"]
+        else:
+            data = self.buffer[self.most_recent_index_cached : current_time, "timestamp"]
 
         # data = [
         #     (value, smoothvalue, self.most_recent_index_cached)
@@ -77,7 +80,8 @@ def test():
         
 
     pid = PID(5, buff, 1, 2, 3)
-    print(pid.update(BUFF_MAX - 1))
+    for i in range(10):
+        print(pid.update())
 
 
 if __name__ == "__main__":  # only runs when this file is run directly in terminal; if imported to somewhere else this doesn't run
