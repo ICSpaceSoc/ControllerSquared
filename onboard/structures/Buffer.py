@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Union
+from typing import List, Tuple, Union
 import numpy as np
-from sys import maxsize
 
 _DEF_DTYPE = [('value', np.float64), ('corr_value', np.float64), ('timestamp', datetime)]
 
@@ -10,12 +9,13 @@ class Buffer:
     Circular buffer which stores sensor readings in a NumPy structured array.
     """
 
-    def __init__(self, max_size: int, dtype: list[tuple[str, type]] = _DEF_DTYPE):
+    def __init__(self, max_size: int, dtype: List[Tuple[str, type]] = _DEF_DTYPE):
         """Initialises a circular buffer using a NumPy structured array.
 
         Args:
             max_size (int): Maximum number of readings to store.
-            dtype: (list[tuple[str, type]], optional): Data type of the readings. Defaults to _DEF_DTYPE.
+            dtype: (list[tuple[str, type]], optional): Data type of the readings. Defaults to 
+                _DEF_DTYPE.
         """
         if max_size <= 0:
             raise ValueError('Buffer size must be positive')
@@ -63,12 +63,14 @@ class Buffer:
             Union[np.void, np.ndarray]: A single reading or a selection of readings.
         """
         
+        # Returns index offset from the current index.
         if isinstance(key, int):
             if (key >= self._size) or (key < -self._size):
                 raise IndexError("Index out of bounds.")
 
             return self._buffer[(self._index + key) % self._max_size]
         
+        # Returns a selection based on the slice of a specific field, offset from the current index.
         if isinstance(key, tuple) and len(key) == 2 and isinstance(key[1], str):
             field = key[1]
             if field not in self._fields:
@@ -86,10 +88,14 @@ class Buffer:
             
             raise ValueError(f"Invalid slice type '{type(key[0])}' for field '{field}'.")
         
+        # Returns a selection based on the slice, offset from the current index.
         if isinstance(key, slice):
             start, stop, step = key.indices(self._max_size)
-            return np.array([self._buffer[(self._index + i) % self._max_size] for i in range(start, stop, step)])
+            return np.array(
+                [self._buffer[(self._index + i) % self._max_size] for i in range(start, stop, step)]
+            )
         
+        # Returns the field from the buffer, oldest to newest.
         if isinstance(key, str):
             if key not in self._fields:
                 raise ValueError(f"Field '{key}' does not exist in the buffer.")
@@ -105,13 +111,17 @@ class Buffer:
             str: A string representation of the buffer data.
         """
 
-        column_widths = {name: max(len(name), max(len(str(row[name])) for row in self._buffer)) for name in self._fields}
+        column_widths = {
+            name: max(len(name), max(len(str(row[name])) for row in self._buffer)) 
+            for name in self._fields
+        }
         header = " | ".join(name.ljust(column_widths[name]) for name in self._fields)
         separator = "-+-".join("-" * column_widths[name] for name in self._fields)
 
         rows = []
         for row in self._buffer:
-            formatted_row = " | ".join(str(row[name]).ljust(column_widths[name]) for name in self._fields)
+            formatted_row = " | "\
+                .join(str(row[name]).ljust(column_widths[name]) for name in self._fields)
             rows.append(formatted_row)
 
         data_str = "\n".join([header, separator] + rows)
