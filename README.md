@@ -1,45 +1,27 @@
-# ICSS Kepler Flow Control Software
+# ControllerSquared
 
-This repository hosts all software related to the ICSS (Imperial College Space Society) Kepler Engine Fuel Flow Control System. The main components are
-- `onboard`: Python-based software intended for a PI-variant on the engine itself, which autonomously controls the fuel flow based on various sensor input (e.g., pressure, temperature). It has a built-in failsafe, but also connects to
-- `failsafe`: An analogue custom-PCB which automatically shuts off all flow if a keep-alive signal from `onboard` dies.
-- `base`: A simple GUI for monitoring and controlling the engine remotely, along with various data analytic tools.
+`ControllerSquared` is a complete software package designed for the ICSS **Kepler** Liquid-Fuel Rocket Engine. It comprises
+- `onboard`: Python-based software intended for a PI-variant on the engine itself, which autonomously controls fuel flow and other parameters during flight (or testing). The software is currently designed to only operate on the FCU (Flow Control Unit).
+- `failsafe`: An custom analogue PCB which automatically shuts off all flow if a keep-alive signal from `onboard` dies.
+- `base`: A simple web-GUI for monitoring and controlling the engine remotely, along with various data analytic tools.
+- `docs`: Where (hopefully) comprehensive documentation is kept about design goals, philosophy, rationale, implementation, and usage.
 
-During development, each of the components have their own directory, and are treated independently. When in doubt, such as when dealing with relative directories, treat each component as a separate project.
+## Architecture
 
-## Onboard
+Development is still in early stages, and various parts of the architecture are expected to change / evolve.
 
-TODO: Docs
+<p align="center">
+    <img src="https://github.com/ICSpaceSoc/ControllerSquared/assets/75836446/d8b2c375-1e90-4860-9ec4-ce97091ac4ba">
+</p>
 
-## Todo list
+## Authors
 
-- Central algorithm
-    - Throw around ideas for the algo [*] [all ]
-    - Ensure input/output to algo works properly
-- Valve control
-    - Test if module can receieve commands from Algorithm 
-- Comms
-    - (not much to be done here yet)
-- Sensor input and preprocessing
-    - Send spoof input via GPIO ports, ensure can be read
-    - 
-- Custom PCB
-    - Design analog killswitch [*]
-- Hardware
-    - Research and buy valves and sensors [*]
-    - Compile datasheet info (ie: sensor output format) into readable format for future ref.
-    - Start designing sensor + valve modules once we settle on sensor + valve specs
-- Server-side
-    - Set up comms framework (https?) [*]
-    - GUI
-        - Throw around GUI design ideas [*]
-    - Database
-        - Test database works
-- Others
-    - Design data format/systems needed [*]
-      - Do this now 
-(tasks with a * are ones that can be tackled immediately)
+All authors are students at Imperial College London, and are, alphabetically,
 
-## For next meeting
-- Check current todo list
-- Assign tasks
+| Who                     | Studies                      |
+| ----------------------- | ---------------------------- |
+| Chris Cheang            | (2YS) Mechanical Engineering |
+| Nishant Kidangan-Mathew | (1YS) Mechanical Engineering |
+| Lancelot Liu            | (1YS) Computing              |
+
+TODO: Add remaining authors.
