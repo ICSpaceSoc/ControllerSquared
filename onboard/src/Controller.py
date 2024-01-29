@@ -5,7 +5,9 @@ This class is responsible for the main loop of the onboard computer.
 """
 
 import asyncio
-from .Sensor import Sensor
+
+from .PTSensor import PTSensor
+from .VenturiPair import VenturiPair
 
 class Controller:
     """
@@ -21,8 +23,9 @@ class Controller:
             cls._instance.__init__()
         return cls._instance
 
-    PT1 = Sensor('PT1', buffer_size=10000, sample_rate=0.0005)
-    PT2 = Sensor('PT2', buffer_size=10000, sample_rate=3)
+    PT1 = PTSensor('PT1')
+    PT2 = PTSensor('PT2')
+    VT1 = VenturiPair('VT1', PT1, 0.0001, PT2, 0.0002, 1000)
 
     def __init__(self):
         self._active = False
@@ -41,7 +44,7 @@ class Controller:
         # Toggle Sensors
         self.PT1.toggle(state)
         self.PT2.toggle(state)
-        
+        self.VT1.toggle(state)
 
     async def loop(self):
         """
