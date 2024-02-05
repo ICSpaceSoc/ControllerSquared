@@ -3,6 +3,8 @@ from collections import deque
 from datetime import datetime
 import numpy as np
 
+from icecream import ic
+
 from .Constants import BUFFER_SIZE, SAMPLE_RATE
 from .Reading import Reading
 
@@ -16,7 +18,7 @@ class VenturiPair:
         self._name = name
         self._sensorSmall = sensorSmall
         self._sensorBig = sensorBig
-        self._const = areaSmall * np.sqrt(2 / (density * (np.power(areaSmall / areaBig, 2) - 1)))
+        self._const = np.power(areaSmall, 2) * 2 / (density * (np.power(areaSmall / areaBig, 2) - 1))
 
         self.buffer = deque(maxlen=BUFFER_SIZE)
 
@@ -32,7 +34,7 @@ class VenturiPair:
         while self._active:
             small = self._sensorSmall.buffer[-1]
             big = self._sensorBig.buffer[-1]
-            vol_flow_rate = self._const * np.sqrt(small.filt - big.filt)
+            vol_flow_rate = np.sqrt((small.filt - big.filt) * self._const)
 
             self.buffer.append(
                 Reading(
@@ -43,4 +45,4 @@ class VenturiPair:
                 )
             )
 
-            await asyncio.sleep(SAMPLE_RATE)
+            await asyncio.sleep(1 / SAMPLE_RATE)

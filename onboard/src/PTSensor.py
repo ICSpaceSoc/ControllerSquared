@@ -56,4 +56,4 @@ class PTSensor:
                 )
             )
 
-            await asyncio.sleep(SAMPLE_RATE)
+            await asyncio.sleep(1 / SAMPLE_RATE)
