@@ -1,84 +1,93 @@
-from copy import deepcopy
-from hmac import new
-import numpy as np
-from icecream import ic
+from dataclasses import dataclass
 from pyparsing import deque
-from datetime import datetime as dt
 from itertools import pairwise
 
 from Reading import Reading
+from Constants import BUFFER_SIZE
+from Helpers import stamp
 
-def dequefilter(deck, condition):
-    deck = deepcopy(deck)
-    for _ in range(len(deck)):
-        item = deck.popleft()
-        if condition(item):
-            deck.append(item)
-    return deck
-
-def timestamp_range_search(l: deque, low: float, high: float) -> list:
-    """return a sublist with timestamps within a given range"""
-    return dequefilter(l, lambda x: low <= x.timestamp <= high)
-
+@dataclass
 class PID:
+    name: str
+    setpoint: float
+    dataBuffer: deque[Reading]
 
-    def __init__(self, setpoint: float, buffer: deque, kp: float, ki: float, kd: float):        
-        """_summary_
+    k: float
+    kp: float
+    ki: float
+    kd: float
 
-        Args:
-            setpoint (_type_): _description_
-            buffer (_type_): _description_
-            kp (_type_): _description_
-            ki (_type_): _description_
-            kd (_type_): _description_
-        """
-        self.setpoint = setpoint # setpoint can be changed by reassigning the variable directly
-        self.buffer = buffer
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
-        self.integral = 0
-        self._lastTime = 0.0 # the most recent timestamp included in the integral.
+    def __post_init__(self):
+        self._buffer: deque[Reading] = deque(maxlen = BUFFER_SIZE)
+        self._currTime: float = 0.0
+        self._lastTime: float = 0.0
 
-    def calcProportional(self):
-        return self.kp * (self.setpoint - self.buffer[-1].filt)
+    @property
+    def error(self) -> float:
+        return self.setpoint - self.dataBuffer[-1].filt
+
+    @property
+    def P(self) -> float:
+        return self.kp * self.error
     
-    def calcIntegral(self, newTime):
-        # TODO: Use new [Buffer] class to implement this
-        data = timestamp_range_search(self.buffer, self._lastTime, newTime)
+    @property
+    def I(self) -> float:
+        data = list(filter(
+            lambda x: self._lastTime <= x.timestamp <= self._currTime,
+            self.dataBuffer
+        ))
 
+        integral = 0
         for pair in pairwise(data): 
             timeDiff = (pair[1].timestamp - pair[0].timestamp)
             valSum = pair[1].filt - pair[0].filt
-            self.integral += timeDiff * 0.5 * valSum
+            integral += timeDiff * 0.5 * valSum
 
-        I = self.ki * self.integral
+        return self.ki * integral
 
-    def calcDerivative(self):
+    @property
+    def D(self) -> float:
         # TODO: calculate better derivative
-        return self.kd * (self.buffer[-1].filt-self.buffer[-2].filt)/(self.buffer[-1].timestamp-self.buffer[-2].timestamp)
+        return self.kd * (self.dataBuffer[-1].filt-self.dataBuffer[-2].filt)/(self.dataBuffer[-1].timestamp-self.dataBuffer[-2].timestamp)
 
-    def update(self) -> float:
-        """Returns a new control value based on the current setpoint and system state."""
+    def U(self) -> float:
+        # [U] is not marked as [@property] since it updates the internal buffer.
+        self._currTime, self._lastTime = self.dataBuffer[-1].timestamp, self._currTime
+        U = self.k * (self.P + self.I + self.D)
 
-        newTime = self.buffer[-1].timestamp
-        U = self.calcProportional() + self.calcIntegral(newTime) + self.calcDerivative()
-        self._lastTime = newTime
-
+        self._buffer.append(Reading(self.name, None, U, self._currTime))
         return U
 
-def test():    
-    BUFF_MAX = 10
-
-    buff = deque()
-    for i in range(BUFF_MAX):
-        buff.append(Reading("test", None, i, dt.now().timestamp()))
-
-    pid = PID(5, buff, 1, 2, 3)
-    for i in range(10):
-        for j in range(10):
-            buff.append(Reading("test", None, j, dt.now().timestamp()))
-        ic(pid.update())
-
+## Debug ##
 if __name__ == "__main__":
-    test()
+    import matplotlib.pyplot as plt
+
+    buffer = deque(maxlen = BUFFER_SIZE)
+    buffer.append(Reading("PIDExpt", None, 0, stamp()))
+
+    iPID = PID("PIDExpt", setpoint = 0, dataBuffer = buffer, k = 1, kp = 0.8, ki = 0.1, kd = 0)
+    realStart = stamp()
+
+    # Selection of Target Functions
+    stepFunc = lambda t: int((t - realStart) > 2)
+
+    target, x = 0, 0
+    pltTarget = []
+    pltX = []
+
+    while True:
+        buffer.append(Reading("PIDExpt", None, x, stamp()))
+
+        pltX.append(x)
+        target = stepFunc(stamp())
+        pltTarget.append(target)
+        iPID.setpoint = target
+
+        U = iPID.U()
+        x += U
+
+        plt.clf()
+        plt.plot(pltTarget, label = "Target")
+        plt.plot(pltX, label = "Real")
+        plt.title("[PIDTest] Target and Real")
+        plt.pause(0.05)
