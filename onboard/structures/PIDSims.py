@@ -1,5 +1,8 @@
-from structures.Buffer import Buffer
-from structures.pid import PID
+"""
+Code to test a vanilla PID controller with fixed parameters.
+"""
+from Buffer import Buffer
+from pid import PID
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
@@ -51,7 +54,7 @@ for i in range(timesteps):
     y = system.following_function()
     iPID.setpoint = y
     following.append(y)
-    u = iPID.update(dt.datetime.now())
+    u = iPID.update()
     u_vals.append(u)
     system.adjust(u)
 
