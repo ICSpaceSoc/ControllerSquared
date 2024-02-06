@@ -1,3 +1,14 @@
+"""
+A generica [PID] controller class. This class is designed to reach a setpoint using PID control
+when only given a data buffer of past data. It does not change its PID coefficients.
+
+To use, initialise with [name], [setpoint], [dataBuffer], and four coefficients [kp], [ki], [kd],
+and [k] which is the gain of the controller. Then, call [U] to get the control signal.
+
+When [U] is called, all data in the buffer that is between the last time [U] was called and the 
+current time is processed to give the new result.
+"""
+
 from dataclasses import dataclass
 from pyparsing import deque
 from itertools import pairwise
@@ -38,9 +49,9 @@ class PID:
         ))
 
         integral = 0
-        for pair in pairwise(data): 
-            timeDiff = (pair[1].timestamp - pair[0].timestamp)
-            valSum = pair[1].filt - pair[0].filt
+        for (prev, curr) in pairwise(data): 
+            timeDiff = (curr.timestamp - prev.timestamp)
+            valSum = curr.filt - prev.filt
             integral += timeDiff * 0.5 * valSum
 
         return self.ki * integral
@@ -58,9 +69,10 @@ class PID:
         self._buffer.append(Reading(self.name, None, U, self._currTime))
         return U
 
-## Debug ##
+## Visual Debug ##
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import numpy as np
 
     buffer = deque(maxlen = BUFFER_SIZE)
     buffer.append(Reading("PIDExpt", None, 0, stamp()))
@@ -70,6 +82,7 @@ if __name__ == "__main__":
 
     # Selection of Target Functions
     stepFunc = lambda t: int((t - realStart) > 2)
+    sineFunc = lambda t: 10 * (1 + np.sin(2 * np.pi * t))
 
     target, x = 0, 0
     pltTarget = []
@@ -79,7 +92,7 @@ if __name__ == "__main__":
         buffer.append(Reading("PIDExpt", None, x, stamp()))
 
         pltX.append(x)
-        target = stepFunc(stamp())
+        target = sineFunc(stamp())
         pltTarget.append(target)
         iPID.setpoint = target
 
