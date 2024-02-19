@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from src import Controller
+from engine.Controller import Controller
 
 async def main():
     cont = Controller()

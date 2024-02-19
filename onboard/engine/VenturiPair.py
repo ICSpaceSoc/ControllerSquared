@@ -5,8 +5,8 @@ import numpy as np
 
 from icecream import ic
 
-from .Constants import BUFFER_SIZE, SAMPLE_RATE
-from .Reading import Reading
+from util.Constants import BUFFER_SIZE, SAMPLE_RATE
+from data.Reading import Reading
 
 class VenturiPair:
     """

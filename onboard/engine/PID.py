@@ -13,9 +13,9 @@ from dataclasses import dataclass
 from pyparsing import deque
 from itertools import pairwise
 
-from Reading import Reading
-from Constants import BUFFER_SIZE
-from Helpers import stamp
+from onboard.data.Reading import Reading
+from util.Constants import BUFFER_SIZE
+from util.Helpers import stamp
 
 @dataclass
 class PID:
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     # Selection of Target Functions
     stepFunc = lambda t: int((t - realStart) > 2)
     sineFunc = lambda t: 10 * (1 + np.sin(2 * np.pi * t))
+    randomNoiseFunc = lambda t: np.random.random()
 
     target, x = 0, 0
     pltTarget = []

@@ -4,8 +4,8 @@ from datetime import datetime
 import numpy as np
 from random import random
 
-from .Constants import BUFFER_SIZE, SAMPLE_RATE
-from .Reading import Reading
+from util.Constants import BUFFER_SIZE, SAMPLE_RATE
+from data.Reading import Reading
 
 class PTSensor:
     """
