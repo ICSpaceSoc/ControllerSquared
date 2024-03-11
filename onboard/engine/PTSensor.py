@@ -24,17 +24,6 @@ class PTSensor:
         # TODO: Implement GPIO reading
         return np.sin(datetime.now().timestamp()) + 0.2 * random()
 
-    # === Smoothing ===
-    def filter_reading(self, raw: float) -> float:
-        """Smoothes raw sensor input based on historical data."""
-
-        # TODO: Implement smoothing algorithm
-
-        # 1. Savitzky-Golay Filter - interpolating polynomials
-        # 2. Moving Averages (simple and triangular)
-        
-        return raw
-
     # === Main Loop ===
     def toggle(self, state: bool):
         self._active = state
@@ -51,7 +40,6 @@ class PTSensor:
                 Reading(
                     self._name,
                     raw,
-                    self.filter_reading(raw),
                     datetime.now().timestamp()
                 )
             )

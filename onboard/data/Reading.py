@@ -4,5 +4,4 @@ from dataclasses import dataclass
 class Reading:
     sensor: str
     raw: float
-    filt: float
     timestamp: float

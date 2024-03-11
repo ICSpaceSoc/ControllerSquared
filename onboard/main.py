@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 
 from engine.Controller import Controller
+from engine.PID import visualDebug
 
 async def main():
     cont = Controller()
@@ -15,6 +16,9 @@ async def main():
         print(f"VT1 {cont.VT1.buffer[-1]}")
 
 if __name__ == "__main__":
-    eventLoop = asyncio.new_event_loop()
-    eventLoop.create_task(main())
-    eventLoop.run_forever()
+    # eventLoop = asyncio.new_event_loop()
+    # eventLoop.create_task(main())
+    # eventLoop.run_forever()
+
+    visualDebug()
+    

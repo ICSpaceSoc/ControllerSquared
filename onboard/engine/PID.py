@@ -10,12 +10,15 @@ current time is processed to give the new result.
 """
 
 from dataclasses import dataclass
+from matplotlib.pyplot import step
 from pyparsing import deque
 from itertools import pairwise
 
-from onboard.data.Reading import Reading
+from data.Filter import filterReading
+from data.Reading import Reading
 from util.Constants import BUFFER_SIZE
 from util.Helpers import stamp
+from icecream import ic
 
 @dataclass
 class PID:
@@ -35,7 +38,7 @@ class PID:
 
     @property
     def error(self) -> float:
-        return self.setpoint - self.dataBuffer[-1].filt
+        return self.setpoint - self.dataBuffer[-1].raw
 
     @property
     def P(self) -> float:
@@ -51,7 +54,7 @@ class PID:
         integral = 0
         for (prev, curr) in pairwise(data): 
             timeDiff = (curr.timestamp - prev.timestamp)
-            valSum = curr.filt - prev.filt
+            valSum = curr.raw - prev.raw
             integral += timeDiff * 0.5 * valSum
 
         return self.ki * integral
@@ -59,49 +62,62 @@ class PID:
     @property
     def D(self) -> float:
         # TODO: calculate better derivative
-        return self.kd * (self.dataBuffer[-1].filt-self.dataBuffer[-2].filt)/(self.dataBuffer[-1].timestamp-self.dataBuffer[-2].timestamp)
+        return self.kd * (self.dataBuffer[-1].raw-self.dataBuffer[-2].raw)/(self.dataBuffer[-1].timestamp-self.dataBuffer[-2].timestamp)
 
     def U(self) -> float:
         # [U] is not marked as [@property] since it updates the internal buffer.
         self._currTime, self._lastTime = self.dataBuffer[-1].timestamp, self._currTime
         U = self.k * (self.P + self.I + self.D)
 
-        self._buffer.append(Reading(self.name, None, U, self._currTime))
+        self._buffer.append(Reading(self.name, U, self._currTime))
         return U
 
 ## Visual Debug ##
-if __name__ == "__main__":
+def visualDebug():
     import matplotlib.pyplot as plt
     import numpy as np
 
     buffer = deque(maxlen = BUFFER_SIZE)
-    buffer.append(Reading("PIDExpt", None, 0, stamp()))
+    buffer.append(Reading("PIDExpt", 0, stamp()))
 
     iPID = PID("PIDExpt", setpoint = 0, dataBuffer = buffer, k = 1, kp = 0.8, ki = 0.1, kd = 0)
     realStart = stamp()
 
     # Selection of Target Functions
-    stepFunc = lambda t: int((t - realStart) > 2)
-    sineFunc = lambda t: 10 * (1 + np.sin(2 * np.pi * t))
+    stepFunc = lambda t: 10 * int((t - realStart) > 3.5) + (np.random.random()-0.5)*0.3 + np.random.standard_gamma(1) * 0.5
+    sineFunc = lambda t: 10 * (1 + np.sin(2 * np.pi * t)) + (np.random.random()-0.5)*4
     randomNoiseFunc = lambda t: np.random.random()
 
     target, x = 0, 0
     pltTarget = []
+    pltFiltered = []
     pltX = []
 
+    lookback = 50
+
+    import random
+
     while True:
-        buffer.append(Reading("PIDExpt", None, x, stamp()))
+        buffer.append(Reading("PIDExpt", x, stamp()))
 
         pltX.append(x)
-        target = sineFunc(stamp())
+        target = stepFunc(stamp())
         pltTarget.append(target)
-        iPID.setpoint = target
 
+        try:
+            pltFiltered = filterReading(pltTarget, lookback).tolist()
+        except ValueError:
+            pltFiltered = pltTarget
+
+        iPID.setpoint = pltFiltered[-1]
         U = iPID.U()
         x += U
 
         plt.clf()
-        plt.plot(pltTarget, label = "Target")
-        plt.plot(pltX, label = "Real")
+        plt.plot(pltTarget, label="Target", color="red")
+        plt.plot(pltFiltered, label="Filtered", color="green")
+        plt.plot(pltX, label="Real (simulation output)", color="orange")
         plt.title("[PIDTest] Target and Real")
+        plt.legend()
+        plt.ylim(-10, 20)
         plt.pause(0.05)
