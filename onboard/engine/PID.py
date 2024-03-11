@@ -74,8 +74,12 @@ class PID:
 
 ## Visual Debug ##
 def visualDebug():
+    import cProfile, pstats
     import matplotlib.pyplot as plt
     import numpy as np
+
+    profiler = cProfile.Profile()
+    profiler.enable()
 
     buffer = deque(maxlen = BUFFER_SIZE)
     buffer.append(Reading("PIDExpt", 0, stamp()))
@@ -97,27 +101,34 @@ def visualDebug():
 
     import random
 
-    while True:
-        buffer.append(Reading("PIDExpt", x, stamp()))
+    try:
+        while True:
+            buffer.append(Reading("PIDExpt", x, stamp()))
 
-        pltX.append(x)
-        target = stepFunc(stamp())
-        pltTarget.append(target)
+            pltX.append(x)
+            target = stepFunc(stamp())
+            pltTarget.append(target)
 
-        try:
-            pltFiltered = filterReading(pltTarget, lookback).tolist()
-        except ValueError:
-            pltFiltered = pltTarget
+            try:
+                pltFiltered = filterReading(pltTarget, lookback).tolist()
+            except ValueError:
+                pltFiltered = pltTarget
 
-        iPID.setpoint = pltFiltered[-1]
-        U = iPID.U()
-        x += U
+            iPID.setpoint = pltFiltered[-1]
+            U = iPID.U()
+            x += U
 
-        plt.clf()
-        plt.plot(pltTarget, label="Target", color="red")
-        plt.plot(pltFiltered, label="Filtered", color="green")
-        plt.plot(pltX, label="Real (simulation output)", color="orange")
-        plt.title("[PIDTest] Target and Real")
-        plt.legend()
-        plt.ylim(-10, 20)
-        plt.pause(0.05)
+            plt.clf()
+            plt.plot(pltTarget, label="Target", color="red")
+            plt.plot(pltFiltered, label="Filtered", color="green")
+            plt.plot(pltX, label="Real (simulation output)", color="orange")
+            plt.title("[PIDTest] Target and Real")
+            plt.legend()
+            plt.ylim(-10, 20)
+            plt.pause(0.000001)
+    except KeyboardInterrupt:
+        pass
+
+    profiler.disable()
+    stats = pstats.Stats(profiler)
+    stats.dump_stats('pid.prof')
