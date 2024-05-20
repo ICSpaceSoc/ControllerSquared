@@ -3,8 +3,6 @@ from collections import deque
 from datetime import datetime
 import numpy as np
 
-from icecream import ic
-
 from util.Constants import BUFFER_SIZE, SAMPLE_RATE
 from data.Reading import Reading
 

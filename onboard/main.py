@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import RPi.GPIO as GPIO
 
 from engine.Controller import Controller
 from engine.PID import visualDebug
@@ -7,6 +8,8 @@ from engine.PID import visualDebug
 async def main():
     cont = Controller()
     cont.toggle(True)
+
+    GPIO.setmode(GPIO.BCM)
 
     while True:
         await asyncio.sleep(1)
