@@ -10,7 +10,6 @@ current time is processed to give the new result.
 """
 
 from dataclasses import dataclass
-from matplotlib.pyplot import step
 from pyparsing import deque
 from itertools import pairwise
 
@@ -18,7 +17,6 @@ from data.Filter import filterReading
 from data.Reading import Reading
 from util.Constants import BUFFER_SIZE
 from util.Helpers import stamp
-from icecream import ic
 
 @dataclass
 class PID:
@@ -46,6 +44,7 @@ class PID:
     
     @property
     def I(self) -> float:
+        # TODO: Optimise filter algorithm.
         data = list(filter(
             lambda x: self._lastTime <= x.timestamp <= self._currTime,
             self.dataBuffer
@@ -99,7 +98,7 @@ def visualDebug():
 
     lookback = 50
 
-    import random
+    cycles = 0
 
     try:
         while True:
@@ -118,17 +117,22 @@ def visualDebug():
             U = iPID.U()
             x += U
 
-            plt.clf()
-            plt.plot(pltTarget, label="Target", color="red")
-            plt.plot(pltFiltered, label="Filtered", color="green")
-            plt.plot(pltX, label="Real (simulation output)", color="orange")
-            plt.title("[PIDTest] Target and Real")
-            plt.legend()
-            plt.ylim(-10, 20)
-            plt.pause(0.000001)
+            cycles += 1
+            if cycles > 10000:
+                break
+
+            # plt.clf()
+            # plt.plot(pltTarget, label="Target", color="red")
+            # plt.plot(pltFiltered, label="Filtered", color="green")
+            # plt.plot(pltX, label="Real (simulation output)", color="orange")
+            # plt.title("[PIDTest] Target and Real")
+            # plt.legend()
+            # plt.ylim(-10, 20)
+            # plt.pause(0.000001)
     except KeyboardInterrupt:
         pass
 
     profiler.disable()
     stats = pstats.Stats(profiler)
     stats.dump_stats('pid.prof')
+    print(f"Cycles: {cycles}")
